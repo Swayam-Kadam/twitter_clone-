@@ -301,7 +301,7 @@ const toggleResetPassword = () => {
           Back to {{ isSignUp ? 'Sign Up' : 'Sign In' }}
         </button>
       </div>
-      <GoogleAuth />
+     <!-- <GoogleAuth /> -->
     </div>
   </div>
 </template>
