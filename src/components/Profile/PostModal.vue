@@ -105,9 +105,9 @@ const handleSubmit = async (e) => {
 
 <template>
   <div v-if="isOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold dark:text-white">Create New Post</h2>
+        <h2 class="text-xl font-bold text-gray-900">Create New Post</h2>
         <button 
           @click="emit('onClose')"
           class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -123,7 +123,7 @@ const handleSubmit = async (e) => {
             v-model="content"
             @input="e => content = e.target.value"
             placeholder="What's on your mind?"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+            class="w-full px-3 py-2 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand"
             rows="4"
             maxlength="280"
             required
@@ -143,8 +143,8 @@ const handleSubmit = async (e) => {
               file:mr-4 file:py-2 file:px-4
               file:rounded-full file:border-0
               file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100"
+              file:bg-brand/10 file:text-brand
+              hover:file:bg-brand/20"
             :disabled="isUploading"
           />
           <div v-if="imagePreview" class="mt-2">
@@ -182,7 +182,7 @@ const handleSubmit = async (e) => {
           <button
             type="submit"
             :disabled="isUploading || !content"
-            class="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+            class="px-6 py-2 rounded-full bg-brand text-white hover:bg-brand-dark disabled:opacity-50 transition-colors"
           >
             {{ isUploading ? 'Posting...' : 'Post' }}
           </button>

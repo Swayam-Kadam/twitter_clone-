@@ -77,7 +77,7 @@ onMounted(() => {
 
 <template>
   <div class="max-w-2xl mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-6 dark:text-white">Your Replies Posts</h1>
+    <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Your Replies Posts</h1>
     
     <LoadingSpinner v-if="isLoading" />
     

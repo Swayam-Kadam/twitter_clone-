@@ -1,20 +1,18 @@
 <template>
-  <div 
-    class="min-h-screen bg-center"
-    style="background-image: url('/bg.jpg')"
-  >
-    <PostLists :session="session" />
+  <div class="min-h-screen chat-wallpaper">
+    <div class="app-shell">
+      <div class="app-content">
+        <PostLists :session="session" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { defineProps } from 'vue';
-import PostLists from './PostsLists.vue';
+import { defineProps } from 'vue'
+import PostLists from './PostsLists.vue'
 
-const props = defineProps({
-  session: {
-    type: Object,
-    required: true
-  }
-});
+defineProps({
+  session: { type: Object, required: true }
+})
 </script>

@@ -1,34 +1,33 @@
 <template>
-  <div class="min-h-screen bg-gray-900" style="background-image: url('/bg.jpg')">
-    <div class="max-w-4xl mx-auto border-x bg-gray-900 border-gray-800 min-h-screen">
+  <div class="min-h-screen chat-wallpaper">
+    <div class="max-w-4xl mx-auto border-x bg-white dark:bg-[#111b21] border-gray-200 dark:border-gray-800 min-h-screen shadow-sm profile-page-shell">
       <!-- Profile Header -->
-      <div class="sticky top-15 z-2 bg-gray-900 bg-opacity-90 backdrop-blur-sm p-4 border-b border-gray-800 flex items-center">
-        <router-link to="/" class="mr-6 p-1 rounded-full hover:bg-gray-800">
-          
+      <div class="sticky top-0 z-10 chat-header-bar p-4 flex items-center">
+        <router-link to="/" class="mr-4 p-1.5 rounded-full hover:bg-white/15 transition-colors">
           <Icon icon="ion:arrow-back" class="text-xl text-white"/>
         </router-link>
         <div>
-          <h1 class="font-bold text-xl text-white">{{ profile?.full_name || profile?.username }}</h1>
-          <p class="text-gray-400 text-sm">{{ posts.length }} posts</p>
+          <h1 class="font-bold text-lg text-white">{{ profile?.full_name || profile?.username }}</h1>
+          <p class="text-white/70 text-sm">{{ posts.length }} posts</p>
         </div>
       </div>
 
       <!-- Cover Photo -->
-      <div class="h-48 bg-blue-500 relative">
+      <div class="h-48 profile-cover relative">
         <!-- Cover photo placeholder -->
       </div>
 
       <!-- Profile Info -->
       <div class="px-4">
         <div class="flex justify-between items-end relative">
-          <div class="absolute -top-16 border-4 border-white dark:border-gray-900 rounded-full">
+          <div class="absolute -top-16 border-4 border-white rounded-full">
             <img v-if="profile?.avatar_url" 
               :src="profile.avatar_url" 
               :alt="profile.username"
               class="w-32 h-32 rounded-full object-cover"
               @error="handleAvatarError"
             />
-            <div v-else class="w-32 h-32 rounded-full bg-gray-700 flex items-center justify-center text-4xl font-bold text-white">
+            <div v-else class="w-32 h-32 rounded-full bg-brand/10 flex items-center justify-center text-4xl font-bold text-brand">
               {{ profile?.username.charAt(0).toUpperCase() }}
             </div>
           </div>
@@ -36,9 +35,8 @@
             <button v-if="session.user?.id !== userId"
               @click="handleFollow"
               :class="{
-                'mt-4 px-4 py-2 rounded-full font-medium text-sm': true,
-                'bg-white text-red-700 border border-gray-300 hover:bg-gray-100 cursor-pointer': isFollowing,
-                'bg-white text-black cursor-pointer': !isFollowing
+                'btn-brand-outline mt-4 px-4 py-2 text-sm cursor-pointer': isFollowing,
+                'btn-brand mt-4 px-4 py-2 text-sm cursor-pointer': !isFollowing
               }"
             >
               {{ isFollowing ? 'Following' : 'Follow' }}
@@ -47,12 +45,12 @@
         </div>
 
         <div class="pt-20 pb-4">
-          <h1 class="text-xl font-bold text-white">{{ profile?.full_name || profile?.username }}</h1>
-          <p class="text-gray-400">@{{ profile?.username }}</p>
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ profile?.full_name || profile?.username }}</h1>
+          <p class="text-gray-500 dark:text-gray-400">@{{ profile?.username }}</p>
           
-          <p v-if="profile?.bio" class="mt-3 text-white">{{ profile?.bio }}</p>
+          <p v-if="profile?.bio" class="mt-3 text-gray-800 dark:text-gray-200">{{ profile?.bio }}</p>
           
-          <div class="flex flex-wrap gap-y-1 mt-3 text-gray-400 text-sm">
+          <div class="flex flex-wrap gap-y-1 mt-3 text-gray-500 dark:text-gray-400 text-sm">
             <div v-if="profile?.website" class="flex items-center mr-4">
               <!-- <IoLinkOutline class="mr-1" /> -->
                <Icon icon="ion:link-outline" class="mr-1"/>
@@ -60,7 +58,7 @@
                 :href="profile.website.startsWith('http') ? profile.website : `https://${profile.website}`"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-blue-400 hover:underline"
+                class="text-brand hover:underline"
               >
                 {{ profile.website.replace(/(^\w+:|^)\/\//, '') }}
               </a>
@@ -75,35 +73,35 @@
 
           <div class="flex mt-4 space-x-5"> 
             <div class="hover:underline cursor-pointer" @click="openFollowModal('following')">
-              <span class="font-bold text-white">{{ profile?.following_count || 0 }}</span> 
-              <span class="text-gray-400"> Following</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ profile?.following_count || 0 }}</span> 
+              <span class="text-gray-500 dark:text-gray-400"> Following</span>
             </div>
             <div class="hover:underline cursor-pointer" @click="openFollowModal('followers')">
-              <span class="font-bold text-white">{{ followersCount }}</span> 
-              <span class="text-gray-400"> Followers</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ followersCount }}</span> 
+              <span class="text-gray-500 dark:text-gray-400"> Followers</span>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Posts -->
-      <div class="border-t border-gray-800 mt-2">
-        <div v-if="loading" class="min-h-screen bg-gray-900">
+      <div class="border-t border-gray-200 mt-2">
+        <div v-if="loading" class="min-h-64 flex items-center justify-center">
           <div class="max-w-2xl mx-auto p-4 flex justify-center py-20">
             <div class="animate-pulse flex flex-col items-center">
-              <div class="rounded-full h-24 w-24 bg-gray-700 mb-4"></div>
-              <div class="h-6 bg-gray-700 rounded w-48 mb-2"></div>
-              <div class="h-4 bg-gray-700 rounded w-32"></div>
+              <div class="rounded-full h-24 w-24 bg-brand/10 mb-4"></div>
+              <div class="h-6 bg-gray-200 rounded w-48 mb-2"></div>
+              <div class="h-4 bg-gray-200 rounded w-32"></div>
             </div>
           </div>
         </div>
 
-        <div v-else-if="error" class="min-h-screen bg-gray-900">
+        <div v-else-if="error" class="p-8 text-center text-red-500">
           <div class="max-w-2xl mx-auto p-4 text-red-500">{{ error }}</div>
         </div>
 
-        <div v-else-if="!profile" class="min-h-screen bg-gray-900">
-          <div class="max-w-2xl mx-auto p-4 text-white">User not found</div>
+        <div v-else-if="!profile" class="p-8 text-center text-gray-400">
+          <div class="max-w-2xl mx-auto p-4 text-gray-500">User not found</div>
         </div>
 
         <div v-else>
@@ -113,7 +111,7 @@
           </div>
 
           <div v-else>
-            <div v-for="post in posts" :key="post.id" class="p-4 border-b border-gray-800 hover:bg-gray-800/50 transition">
+            <div v-for="post in posts" :key="post.id" class="p-4 border-b border-gray-100 hover:bg-gray-50 transition app-card mx-4 my-2">
               <div class="flex space-x-3">
                 <router-link :to="`/profile/${post.user_id}`" class="flex-shrink-0">
                   <img v-if="post.profiles.avatar_url"
@@ -122,7 +120,7 @@
                     class="w-12 h-12 rounded-full object-cover"
                     @error="handlePostAvatarError(post.profiles.username)"
                   />
-                  <div v-else class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center text-lg font-bold text-white">
+                  <div v-else class="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center text-lg font-bold text-brand">
                     {{ post.profiles.username.charAt(0).toUpperCase() }}
                   </div>
                 </router-link>
@@ -131,7 +129,7 @@
                   <div class="flex items-center space-x-1">
                     <router-link 
                       :to="`/profile/${post.user_id}`"
-                      class="font-bold hover:underline truncate text-white"
+                      class="font-bold hover:underline truncate text-gray-900 dark:text-white"
                     >
                       {{ post.profiles.full_name || post.profiles.username }}
                     </router-link>
@@ -142,12 +140,12 @@
                     </span>
                   </div>
                   
-                  <p class="mt-1 mb-2 whitespace-pre-line text-white">{{ post.content }}</p>
+                  <p class="mt-1 mb-2 whitespace-pre-line text-gray-900 dark:text-gray-100">{{ post.content }}</p>
                   
                   <img v-if="post.image_url"
                     :src="post.image_url" 
                     alt="Post content" 
-                    class="mt-2 rounded-xl border border-gray-700 overflow-hidden w-full h-auto max-h-96 object-contain"
+                    class="mt-2 rounded-xl border border-gray-200 overflow-hidden w-full h-auto max-h-96 object-contain"
                   />
                   
                   <div class="flex gap-5 mt-3 text-gray-400 max-w-md">
@@ -166,7 +164,7 @@
 
                     <button 
                       @click="toggleComments(post.id)"
-                      class="flex items-center space-x-1 hover:text-blue-400"
+                      class="flex items-center space-x-1 hover:text-brand"
                     >
                       
                       <Icon icon="ion:chatbubble-outline" />
@@ -186,11 +184,11 @@
                         v-model="replyText"
                         :name="`reply-${post.id}`"
                         placeholder="Write a reply..."
-                        class="flex-1 p-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 "
+                        class="flex-1 p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-brand/30"
                       />
                       <button
                         type="submit"
-                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                        class="px-4 py-2 bg-brand text-white rounded-full text-sm hover:bg-brand-dark transition-colors"
                       >
                         Reply
                       </button>
@@ -198,7 +196,7 @@
 
                     <!-- Replies list -->
                     <div class="space-y-3">
-                      <div v-for="reply in post.replies" :key="reply.id" class="flex items-start space-x-3 p-3 bg-gray-800 rounded-md ">
+                      <div v-for="reply in post.replies" :key="reply.id" class="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700/80 rounded-xl">
                         <router-link 
                           :to="`/profile/${reply.user_id}`"
                           class="flex-shrink-0"
@@ -209,7 +207,7 @@
                             class="w-10 h-10 rounded-full object-cover"
                             @error="handleReplyAvatarError(reply.profiles.username)"
                           />
-                          <div v-else class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-lg font-bold text-white">
+                          <div v-else class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-lg font-bold text-brand">
                             {{ reply.profiles.username.charAt(0).toUpperCase() }}
                           </div>
                         </router-link>
@@ -218,7 +216,7 @@
                           <div class="flex items-center space-x-1">
                             <router-link 
                               :to="`/profile/${reply.user_id}`"
-                              class="font-bold hover:underline truncate text-white"
+                              class="font-bold hover:underline truncate text-gray-900 dark:text-white"
                             >
                               {{ reply.profiles.full_name || reply.profiles.username }}
                             </router-link>
@@ -228,7 +226,7 @@
                               {{ formatDate(reply.created_at) }}
                             </span>
                           </div>
-                          <p class="mt-1 text-white">{{ reply.content }}</p>
+                          <p class="mt-1 text-gray-800 dark:text-gray-200">{{ reply.content }}</p>
                         </div>
                         <button v-if="reply.user_id === session?.user?.id"
                           @click="handleDeleteReply(post.id, reply.id)"

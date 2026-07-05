@@ -1,7 +1,6 @@
 <template>
   <div
-    class="flex-1 p-4 mt-15 overflow-y-auto bg-gray-50"
-    style="background-image: url('/bg.jpg')"
+    class="flex-1 p-4 mt-15 overflow-y-auto chat-wallpaper-panel"
     @scroll="$emit('scroll')"
   >
     <MessageItem

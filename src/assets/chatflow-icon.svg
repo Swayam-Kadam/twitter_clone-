@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="chatflow-bg" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#25D366"/>
+      <stop offset="0.45" stop-color="#128C7E"/>
+      <stop offset="1" stop-color="#075E54"/>
+    </linearGradient>
+    <linearGradient id="chatflow-shine" x1="160" y1="120" x2="360" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="chatflow-shadow" x="80" y="100" width="352" height="320" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#034A42" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <!-- App icon background -->
+  <rect width="512" height="512" rx="112" fill="url(#chatflow-bg)"/>
+  <ellipse cx="196" cy="168" rx="140" ry="100" fill="url(#chatflow-shine)"/>
+
+  <!-- Main chat bubble -->
+  <g filter="url(#chatflow-shadow)">
+    <path
+      fill="#FFFFFF"
+      d="M148 156c0-33.137 26.863-60 60-60h116c33.137 0 60 26.863 60 60v92c0 33.137-26.863 60-60 60H248l-72 48v-48h-28c-33.137 0-60-26.863-60-60v-92z"
+    />
+  </g>
+
+  <!-- Speech tail -->
+  <path fill="#FFFFFF" d="M248 308l-44 38 12-38h32z"/>
+
+  <!-- Connection dots (social flow) -->
+  <circle cx="208" cy="214" r="16" fill="#128C7E"/>
+  <circle cx="264" cy="214" r="16" fill="#128C7E"/>
+  <circle cx="320" cy="214" r="16" fill="#128C7E"/>
+
+  <!-- Subtle ring accent -->
+  <circle cx="256" cy="256" r="220" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="8"/>
+</svg>

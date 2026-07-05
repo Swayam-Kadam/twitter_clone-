@@ -1,42 +1,40 @@
 <template>
-  <div class=" p-4 border-b border-gray-300  justify-between items-center flex-row sm:flex">
-    <h2 class="text-sm sm:text-xl font-bold ">Group Chats</h2>
-   
-    <button 
+  <div class="p-4 border-b border-gray-200 dark:border-gray-700 justify-between items-center flex-row sm:flex">
+    <h2 class="text-sm sm:text-xl font-bold text-gray-900 dark:text-white">Group Chats</h2>
+
+    <button
       @click="showCreateGroupModal = true"
-      class="bg-blue-500 text-white px-3 py-1 text-sm sm:text-xl rounded-lg hover:bg-blue-600"
+      class="bg-brand text-white px-3 py-1.5 text-sm sm:text-base rounded-full hover:bg-brand-dark transition-colors font-medium"
     >
       New Group
     </button>
   </div>
-  
-  <div class="overflow-y-auto">
-    <div 
-      v-for="group in groups" 
+
+  <div>
+    <div
+      v-for="group in groups"
       :key="group.id"
       @click="selectGroup(group)"
-      class="p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50"
-      :class="{ 'bg-blue-50': activeGroup?.id === group.id }"
+      class="p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60"
+      :class="{ 'chat-list-item-active': activeGroup?.id === group.id }"
     >
       <div class="flex items-center">
         <div class="relative">
-          <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-blue-100 flex items-center justify-center">
+          <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-brand/10 flex items-center justify-center">
             <div v-if="group.avatar_url">
-                <img
+              <img
                 :src="group.avatar_url || '/default-group-avatar.png'"
                 :alt="group.name"
                 class="w-8 h-8 sm:w-12 sm:h-12 rounded-full object-cover"
               />
             </div>
             <div v-else>
-            <Icon icon="mdi:account-group" class="w-6 h-6 text-blue-500" />  
+              <Icon icon="mdi:account-group" class="w-6 h-6 text-brand" />
             </div>
-            
           </div>
         </div>
         <div class="ml-3">
-          <h3 class="font-semibold sm:text-lg text-sm">{{ group.name || "unknown" }}</h3>
-          <!-- <p class="text-sm text-gray-500 truncate">{{ group.description || 'No description' }}</p> -->
+          <h3 class="font-semibold sm:text-lg text-sm text-gray-900 dark:text-white">{{ group.name || "unknown" }}</h3>
         </div>
       </div>
     </div>
@@ -73,7 +71,7 @@
               v-model="selectedUsers" 
               :value="user.id" 
               type="checkbox"
-              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              class="h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand/30"
             >
             <label :for="`user-${user.id}`" class="ml-2 block text-sm text-gray-900">
               {{ user.full_name || user.username }}
@@ -128,7 +126,7 @@
           />
           <button
             @click="triggerGroupAvatarInput"
-            class="px-3 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
+            class="px-3 py-2 bg-brand text-white rounded-lg text-sm hover:bg-brand-dark transition-colors"
           >
             {{ groupAvatarPreview ? 'Change' : 'Upload' }} Image
           </button>
@@ -143,7 +141,7 @@
       <input 
         v-model="newGroup.name" 
         type="text" 
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-brand focus:ring-brand/30"
         placeholder="Enter group name"
       >
     </div>
@@ -153,7 +151,7 @@
       <label class="block text-sm font-medium text-gray-700">Description</label>
       <textarea 
         v-model="newGroup.description" 
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-brand focus:ring-brand/30"
         placeholder="Optional group description"
         rows="3"
       ></textarea>
@@ -173,7 +171,7 @@
             v-model="selectedUsers" 
             :value="user.id" 
             type="checkbox"
-            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            class="h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand/30"
           >
           <label :for="`user-${user.id}`" class="ml-3 flex items-center">
             <img
@@ -200,7 +198,7 @@
       <button 
         @click="createGroup"
         :disabled="!newGroup.name.trim() || uploadingAvatar"
-        class="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-brand/30 transition-colors"
       >
         <template v-if="uploadingAvatar">
           <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

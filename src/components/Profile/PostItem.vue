@@ -190,7 +190,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+  <div class="app-card p-4">
     <div class="flex items-start space-x-3">
       <img 
         :src="post.profiles.avatar_url || '/default-avatar.png'" 
@@ -199,18 +199,18 @@ onMounted(() => {
       />
       <div class="flex-1">
         <div class="flex items-center space-x-2">
-          <span class="font-bold dark:text-white">
+          <span class="font-bold text-gray-900 dark:text-white">
             {{ post.profiles.full_name || post.profiles.username }}
           </span>
-          <span class="text-gray-500 text-sm">
+          <span class="text-gray-500 dark:text-gray-400 text-sm">
             @{{ post.profiles.username }}
           </span>
-          <span class="text-gray-400 text-sm">
+          <span class="text-gray-400 dark:text-gray-500 text-sm">
              {{ formatDistanceToNow(new Date(post.created_at)), { addSuffix: true } }}
           </span>
         </div>
         
-        <p class="mt-1 dark:text-gray-200">{{ post.content }}</p>
+        <p class="mt-1 text-gray-900 dark:text-gray-100 leading-relaxed">{{ post.content }}</p>
         
         <div v-if="post.image_url" class="mt-2">
           <img 
@@ -244,7 +244,7 @@ onMounted(() => {
           
           <button 
             @click="toggleComments"
-            class="flex items-center space-x-1 hover:text-blue-500"
+            class="flex items-center space-x-1 hover:text-brand"
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
@@ -281,12 +281,12 @@ onMounted(() => {
               v-model="newComment"
               @input="e => newComment = e.target.value"
               placeholder="Write a comment..."
-              class="flex-1 p-2 w-1  border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              class="flex-1 p-2 border border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400"
               :disabled="isCommenting"
             />
             <button
               type="submit"
-              class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+              class="px-4 py-2 bg-brand text-white rounded-full text-sm hover:bg-brand-dark disabled:opacity-50 transition-colors"
               :disabled="isCommenting || !newComment.trim()"
             >
               {{ isCommenting ? 'Posting...' : 'Post' }}
@@ -294,7 +294,7 @@ onMounted(() => {
           </form>
           
           <div class="space-y-3">
-            <div v-for="comment in comments" :key="comment.id" class="flex items-start space-x-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-md">
+            <div v-for="comment in comments" :key="comment.id" class="flex items-start space-x-2 p-2 bg-gray-50 dark:bg-gray-700/80 rounded-xl">
               <img 
                 :src="comment.profiles.avatar_url || '/default-avatar.png'" 
                 :alt="comment.profiles.username"
@@ -302,17 +302,17 @@ onMounted(() => {
               />
               <div class="flex-1">
                 <div class="flex items-center space-x-2">
-                  <span class="font-medium text-sm dark:text-white">
+                  <span class="font-medium text-sm text-gray-900 dark:text-white">
                     {{ comment.profiles.full_name || comment.profiles.username }}
                   </span>
-                  <span class="text-gray-500 text-xs">
+                  <span class="text-gray-500 dark:text-gray-400 text-xs">
                     @{{ comment.profiles.username }}
                   </span>
-                  <span class="text-gray-400 text-xs">
+                  <span class="text-gray-400 dark:text-gray-500 text-xs">
                     {{ formatDistanceToNow(new Date(comment.created_at)), { addSuffix: true } }}
                   </span>
                 </div>
-                <p class="text-sm mt-1 dark:text-gray-200">{{ comment.content }}</p>
+                <p class="text-sm mt-1 text-gray-800 dark:text-gray-200">{{ comment.content }}</p>
               </div>
               <button 
                 v-if="comment.profiles.id === session?.user?.id"

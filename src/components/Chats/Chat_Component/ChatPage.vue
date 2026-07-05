@@ -33,7 +33,7 @@
           @delete-chat="deleteChat(activeChat.id)"
         />
 
-        <div class="flex-1 p-4 mt-15 overflow-y-auto bg-gray-50" style="background-image: url('/bg.jpg')" @scroll="handleScroll">
+        <div class="flex-1 p-4 mt-15 overflow-y-auto chat-wallpaper-panel" @scroll="handleScroll">
           <div v-for="message in messages" :key="message.id"
             class="mb-4 flex"
             :class="{
@@ -77,7 +77,7 @@
           @show-info="showGroupInfo = true"
         />
 
-        <div class="flex-1 p-4 mt-15 overflow-y-auto bg-gray-50" style="background-image: url('/bg.jpg')" @scroll="handleScroll">
+        <div class="flex-1 p-4 mt-15 overflow-y-auto chat-wallpaper-panel" @scroll="handleScroll">
           <div v-for="message in groupMessages" :key="message.id" 
             class="mb-4 flex group/message relative"
             :class="{

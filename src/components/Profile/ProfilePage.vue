@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase } from '../lib/supabaseClient'
+import { ensureUserProfile } from '../lib/ensureUserProfile'
 import LoadingSpinner from './LoadingSpinner.vue'
 import PostModal from './PostModal.vue'
 import PostList from './PostList.vue'
@@ -40,7 +41,11 @@ const fetchProfile = async () => {
       isLoading.value = false
       return
     }
-    
+
+    await ensureUserProfile(data.session.user).catch((err) =>
+      console.error('Error ensuring profile:', err)
+    )
+
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select(`
@@ -214,7 +219,7 @@ const openFollowModal = (type) => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto bg-white dark:bg-gray-900 min-h-screen">
+  <div class="max-w-4xl mx-auto bg-white dark:bg-[#111b21] min-h-screen shadow-sm profile-page-shell">
     <!-- Loading State -->
     <LoadingSpinner v-if="isLoading" />
     
@@ -222,7 +227,7 @@ const openFollowModal = (type) => {
     <template v-else-if="profile">
       <!-- Profile Header -->
       <div class="relative">
-        <div class="h-48 bg-blue-500 w-full"></div>
+        <div class="h-48 profile-cover w-full"></div>
         
         <div class="px-4">
           <div class="flex justify-between items-end relative">
@@ -237,7 +242,7 @@ const openFollowModal = (type) => {
             <div class="ml-auto pt-4 flex space-x-2">
               <button
                 @click="handleEditProfile"
-                class="px-4 py-2 rounded-full font-bold text-sm bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 cursor-pointer" 
+                class="btn-brand-outline px-4 py-2 text-sm cursor-pointer" 
               >
                 Edit Profile
               </button>
@@ -254,7 +259,7 @@ const openFollowModal = (type) => {
 
               <button 
                 @click="isPostModalOpen = true"
-                class="bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 cursor-pointer"
+                class="bg-brand text-white w-12 h-12 rounded-full shadow-lg hover:bg-brand-dark cursor-pointer flex items-center justify-center text-2xl font-light transition-colors"
               >
                 +
               </button>
@@ -264,12 +269,12 @@ const openFollowModal = (type) => {
         
         <!-- Profile Info -->
         <div class="px-4 pt-6 pb-4">
-          <h1 class="text-xl font-bold dark:text-white">{{ profile.full_name }}</h1>
-          <p class="text-gray-500">@{{ profile.username }}</p>
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ profile.full_name }}</h1>
+          <p class="text-gray-500 dark:text-gray-400">@{{ profile.username }}</p>
           
-          <p class="mt-3 dark:text-gray-300">{{ profile.bio || 'No bio yet.' }}</p>
+          <p class="mt-3 text-gray-800 dark:text-gray-200">{{ profile.bio || 'No bio yet.' }}</p>
           
-          <div class="flex-row md:flex items-center mt-3 text-gray-500 space-x-4">
+          <div class="flex-row md:flex items-center mt-3 text-gray-500 dark:text-gray-400 space-x-4">
             <div v-if="profile.location" class="flex items-center">
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -282,7 +287,7 @@ const openFollowModal = (type) => {
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               </svg>
-              <a :href="profile.website" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">
+              <a :href="profile.website" target="_blank" rel="noopener noreferrer" class="text-brand hover:underline">
                 {{ profile.website }}
               </a>
             </div>
@@ -297,12 +302,12 @@ const openFollowModal = (type) => {
           
           <div class="flex mt-4 space-x-5">
             <div class="flex items-center cursor-pointer" @click="openFollowModal('following')">
-              <span class="font-bold dark:text-white">{{ profile.following_count || 0 }}</span>
-              <span class="ml-1 text-gray-500">Following</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ profile.following_count || 0 }}</span>
+              <span class="ml-1 text-gray-500 dark:text-gray-400">Following</span>
             </div>
             <div class="flex items-center cursor-pointer" @click="openFollowModal('followers')">
-              <span class="font-bold dark:text-white">{{ profile.followers_count || 0 }}</span>
-              <span class="ml-1 text-gray-500">Followers</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ profile.followers_count || 0 }}</span>
+              <span class="ml-1 text-gray-500 dark:text-gray-400">Followers</span>
             </div>
           </div>
         </div>
@@ -313,27 +318,27 @@ const openFollowModal = (type) => {
         <nav class="flex -mb-px">
           <button
             @click="activeTab = 'posts'"
-            :class="`px-4 py-3 text-sm font-medium ${activeTab === 'posts' 
-              ? 'border-b-2 border-blue-500 text-blue-500 dark:text-blue-400' 
-              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+            :class="`px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'posts'
+              ? 'tab-active'
+              : 'text-gray-500 dark:text-gray-400 hover:text-brand'
             }`"
           >
             Posts
           </button>
           <button
             @click="activeTab = 'replies'"
-            :class="`px-4 py-3 text-sm font-medium ${activeTab === 'replies' 
-              ? 'border-b-2 border-blue-500 text-blue-500 dark:text-blue-400' 
-              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+            :class="`px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'replies'
+              ? 'tab-active'
+              : 'text-gray-500 dark:text-gray-400 hover:text-brand'
             }`"
           >
             Replies
           </button>
           <button
             @click="activeTab = 'likes'"
-            :class="`px-4 py-3 text-sm font-medium ${activeTab === 'likes' 
-              ? 'border-b-2 border-blue-500 text-blue-500 dark:text-blue-400' 
-              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+            :class="`px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'likes'
+              ? 'tab-active'
+              : 'text-gray-500 dark:text-gray-400 hover:text-brand'
             }`"
           >
             Likes
@@ -360,7 +365,7 @@ const openFollowModal = (type) => {
       <p class="text-gray-500">Creating your profile...</p>
       <button
                 @click="handleEditProfile"
-                class="px-4 py-2 rounded-full font-bold text-sm bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 cursor-pointer" 
+                class="btn-brand-outline px-4 py-2 text-sm cursor-pointer" 
               >
                 Edit Profile
               </button>
@@ -396,8 +401,8 @@ const openFollowModal = (type) => {
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-full file:border-0
                   file:text-sm file:font-semibold
-                  file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100"
+                  file:bg-brand/10 file:text-brand
+                  hover:file:bg-brand/20"
               />
             </div>
           </div>
@@ -468,7 +473,7 @@ const openFollowModal = (type) => {
             <button
               type="submit"
               :disabled="isUploading"
-              class="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+              class="px-4 py-2 rounded-xl bg-brand text-white hover:bg-brand-dark disabled:opacity-50 transition-colors"
             >
               {{ isUploading ? 'Saving...' : 'Save Changes' }}
             </button>

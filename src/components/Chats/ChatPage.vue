@@ -1,36 +1,34 @@
 <template>
-  <div class="flex h-screen bg-gray-100">
+  <div class="flex h-[calc(100vh-56px)] bg-chat-panel">
 
   
     <!-- Following List Sidebar -->
-    <div class="w-1/3 border-r border-gray-300 bg-white transition-all duration-300 ease-in-out"
+    <div
+      class="w-1/3 flex flex-col h-full chat-sidebar-panel transition-all duration-300 ease-in-out"
       :class="{
         'translate-x-0': sidebarVisible,
         '-translate-x-full absolute': !sidebarVisible
-      }">
-      <div class="p-4 border-b border-gray-300 flex justify-between items-center">
-        <h2 class="text-sm sm:text-xl font-bold">Messages</h2>
-         <!-- Toggle Button -->
-    <button
-    
-        
-      @click="toggleSidebar"
-      class=" top-4 left-2 z-50 p-[2px]  bg-white rounded-full shadow-md hover:bg-gray-100 transition-all duration-300"
-      :class="{ 'left-4': sidebarVisible, 'left-4': !sidebarVisible }"
+      }"
     >
-      <Icon 
-        :icon="sidebarVisible ? 'mdi:chevron-left' : 'mdi:menu'" 
-        class="w-5 h-5 text-gray-700" 
-      />
-    </button>
+      <div class="shrink-0 p-4 chat-header-bar flex justify-between items-center">
+        <h2 class="text-sm sm:text-lg font-semibold text-white">Messages</h2>
+        <button
+          @click="toggleSidebar"
+          class="p-1.5 bg-white/20 rounded-full hover:bg-white/30 transition-all duration-300"
+        >
+          <Icon
+            :icon="sidebarVisible ? 'mdi:chevron-left' : 'mdi:menu'"
+            class="w-5 h-5 text-white"
+          />
+        </button>
       </div>
 
-      <div class="overflow-y-auto h-[calc(100vh-60px)]">
+      <div class="flex-1 min-h-0 scrollbar-thin overflow-y-auto">
         <div v-for="followedUser in following" :key="followedUser.id"
           @click="handleSelectUser(followedUser)"
           :class="{
-            'p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 relative group': true,
-            'bg-blue-50': activeChat && getOtherUser(activeChat) === followedUser.id
+            'p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 relative group': true,
+            'chat-list-item-active': activeChat && getOtherUser(activeChat) === followedUser.id
           }"
         >
           <div class="flex items-center">
@@ -44,9 +42,9 @@
             </div>
             <div class="ml-3 flex-1">
               <div class="flex justify-between items-start">
-                <h3 class="font-semibold sm:text-lg text-sm">{{ followedUser.full_name || followedUser.username }}</h3>
+                <h3 class="font-semibold sm:text-lg text-sm text-gray-900 dark:text-white">{{ followedUser.full_name || followedUser.username }}</h3>
               </div>
-              <p class="text-[0.6rem] sm:text-sm  text-gray-500">
+              <p class="text-[0.6rem] sm:text-sm text-gray-500 dark:text-gray-400">
                 {{ onlineUsers.includes(followedUser.id) ? 'Online' : 'Offline' }}
               </p>
             </div>
@@ -68,7 +66,7 @@
     <div class="flex-1 flex flex-col transition-all duration-300"
       :class="{ 'md:ml-0': sidebarVisible, 'ml-0': !sidebarVisible }">
       <template v-if="activeChat">
-        <div class="fixed w-full p-4 border-b border-gray-300 bg-white flex items-center justify-between">
+        <div class="fixed w-full p-3 chat-header-bar flex items-center justify-between z-10 shadow-md">
           <div class="flex items-center">
             <button
             v-if="!sidebarVisible"
@@ -77,7 +75,7 @@
             >
             <Icon 
               :icon="sidebarVisible ? 'mdi:chevron-left' : 'mdi:menu'" 
-              class="w-5 h-5 text-gray-700" 
+              class="w-5 h-5 text-black" 
             />
           </button>
             <div class="relative">
@@ -89,19 +87,19 @@
               <div v-if="onlineUsers.includes(getOtherUser(activeChat))" class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
             </div>
             <div class="ml-3">
-              <h3 class="font-semibold">
+              <h3 class="font-semibold text-white">
                 {{ following.find(u => u.id === getOtherUser(activeChat))?.full_name || 
                    following.find(u => u.id === getOtherUser(activeChat))?.username }}
               </h3>
-              <p class="text-xs text-gray-500">
+              <p class="text-xs text-white/70">
                 {{ onlineUsers.includes(getOtherUser(activeChat)) ? 'Online' : 'Offline' }}
-                <span v-if="isTyping && typingUser === (getOtherUser(activeChat))" class="ml-2 text-blue-500">typing...</span>
+                <span v-if="isTyping && typingUser === (getOtherUser(activeChat))" class="ml-2 text-brand-light">typing...</span>
               </p>
             </div>
           </div>
         </div>
 
-        <div class="flex-1 p-4 mt-15 overflow-y-auto bg-gray-50" style="background-image: url('/bg.jpg')" @scroll="handleScroll">
+        <div class="flex-1 p-4 mt-15 scrollbar-thin overflow-y-auto chat-wallpaper-panel" @scroll="handleScroll">
           <div v-for="message in messages" :key="message.id"
             class="mb-4 flex"
             :class="{
@@ -112,8 +110,8 @@
             <div
               class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg"
               :class="{
-                'bg-blue-400 text-white': message.sender_id === user.id,
-                'bg-white border border-gray-200': message.sender_id !== user.id
+                'bubble-sent': message.sender_id === user.id,
+                'bubble-received': message.sender_id !== user.id
               }"
             >
               <div v-if="message.image_url" class="mb-2">
@@ -129,7 +127,7 @@
             <!-- In the One to One messages section -->
             <p class="text-xs mt-1 flex"
               :class="{
-                'text-blue-100': message.sender_id === user.id,
+                'text-gray-500': message.sender_id === user.id,
                 'text-gray-500': message.sender_id !== user.id
               }"
             >
@@ -148,7 +146,7 @@
                 <Icon 
                   v-else-if="message.read_at" 
                   icon="mdi:check-all" 
-                  class="w-3 h-3 text-blue-800" 
+                  class="w-3 h-3 text-[#34b7f1]" 
                 />
               </span>
               <button v-if="message.sender_id === user.id"
@@ -231,13 +229,13 @@
                 @input="handleTyping"
                 @keypress.enter="sendMessage"
                 placeholder="Type a message..."
-                class="w-full border border-gray-300 rounded-lg px-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full border border-gray-200 rounded-full px-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand/30 bg-gray-50"
               />
             </div>
             <button
               @click="sendMessage"
               :disabled="(!newMessage.trim() && !selectedFile) || uploading"
-              class="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center"
+              class="ml-2 bg-brand text-white px-4 py-2.5 rounded-full hover:bg-brand-dark disabled:opacity-50 flex items-center transition-colors"
             >
               <template v-if="uploading">
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -262,20 +260,20 @@
       <template v-else-if="activeGroup">
         <!-- Group chat header -->
         <div  :class="!sidebarVisible 
-    ? 'fixed w-[100%] p-4 border-b border-gray-300 bg-white flex items-center justify-between z-1'
-    : 'fixed w-[67%] p-4 border-b border-gray-300 bg-white flex items-center justify-between z-1'">
+    ? 'fixed w-[100%] p-3 chat-header-bar flex items-center justify-between z-10 shadow-md'
+    : 'fixed w-[67%] p-3 chat-header-bar flex items-center justify-between z-10 shadow-md'">
           <button
             v-if="!sidebarVisible"
             @click="toggleSidebar"
-            class=" top-4 mr-3 z-50 p-[2px]  bg-white rounded-full shadow-md hover:bg-gray-100 transition-all duration-300"
+            class=" top-4 mr-3 z-50 p-[2px]   bg-white rounded-full shadow-md hover:bg-gray-100 transition-all duration-300"
             >
             <Icon 
               :icon="sidebarVisible ? 'mdi:chevron-left' : 'mdi:menu'" 
-              class="w-5 h-5 text-gray-700" 
+              class="w-5 h-5 text-black" 
             />
           </button>
           <div class="flex items-center">
-            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
               <!-- <Icon icon="mdi:account-group" class="w-5 h-5 text-blue-500" /> -->
                <div v-if='activeGroup.avatar_url'>
                   <img
@@ -285,13 +283,13 @@
                   />
                </div>
                <div v-else>
-                  <Icon icon="mdi:account-group" class="w-5 h-5 text-blue-500" />
+                  <Icon icon="mdi:account-group" class="w-5 h-5 text-white" />
                </div>
             </div>
             
             <div class="ml-3">
-              <h3 class="font-semibold">{{ activeGroup.name || "unknown"}}</h3>
-              <p class="text-xs text-gray-500">
+              <h3 class="font-semibold text-white">{{ activeGroup.name || "unknown"}}</h3>
+              <p class="text-xs text-white/70">
                 {{ groupMembers.length }} members
               </p>
             </div>
@@ -306,14 +304,14 @@
               @click="showGroupSettings = true"
               class="text-gray-500 hover:text-gray-700"
               >
-              <Icon icon="mdi:cog" class="w-5 h-5" />
+              <Icon icon="mdi:cog" class="w-5 h-5 text-white" />
             </button>
             
             <button
               @click="showGroupInfo = true"
               class="text-gray-500 hover:text-gray-700"
             >
-              <Icon icon="mdi:information-outline" class="w-5 h-5" />
+              <Icon icon="mdi:information-outline" class="w-5 h-5 text-white" />
             </button>
             </div>
 
@@ -322,7 +320,7 @@
 
         
         <!-- Group messages -->
-        <div class="flex-1 p-4 mt-15 overflow-y-auto bg-gray-50" style="background-image: url('/bg.jpg')" @scroll="handleScroll">
+        <div class="flex-1 p-4 mt-15 scrollbar-thin overflow-y-auto chat-wallpaper-panel" @scroll="handleScroll">
           <div v-for="message in groupMessages" :key="message.id" 
           class="mb-4 flex group/message relative"
           :class="{
@@ -333,8 +331,8 @@
             <div
               class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg relative"
               :class="{
-                'bg-blue-400 text-white': message.sender_id === user.id,
-                'bg-white border border-gray-200': message.sender_id !== user.id
+                'bubble-sent': message.sender_id === user.id,
+                'bubble-received': message.sender_id !== user.id
               }"
             >
               <div v-if="message.image_url" class="mb-2">
@@ -348,7 +346,7 @@
             
             <p class="text-xs mt-1 flex"
               :class="{
-                'text-blue-100': message.sender_id === user.id,
+                'text-gray-500': message.sender_id === user.id,
                 'text-gray-500': message.sender_id !== user.id
               }"
             >
@@ -367,7 +365,7 @@
                 <Icon 
                   v-else-if="message.read_at" 
                   icon="mdi:check-all" 
-                  class="w-3 h-3 text-blue-800" 
+                  class="w-3 h-3 text-[#34b7f1]" 
                 />
               </span>
               <button v-if="message.sender_id === user.id"
@@ -387,13 +385,13 @@
                 @click="toggleReaction(message.id, reaction.emoji)"
                 class="px-2 py-1 rounded-full flex items-center cursor-pointer transition-colors"
                 :class="{
-                  'bg-blue-100 border border-blue-300': hasUserReacted(message.id, reaction.emoji, user.id),
+                  'bg-brand/10 border border-brand/30': hasUserReacted(message.id, reaction.emoji, user.id),
                   'bg-gray-100 hover:bg-gray-200': !hasUserReacted(message.id, reaction.emoji, user.id)
                 }"
               >
                 <span class="text-sm mr-1">{{ reaction.emoji }}</span>
                 <span class="text-xs" :class="{
-                  'text-blue-600': hasUserReacted(message.id, reaction.emoji, user.id),
+                  'text-brand': hasUserReacted(message.id, reaction.emoji, user.id),
                   'text-gray-600': !hasUserReacted(message.id, reaction.emoji, user.id)
                 }">
                   {{ reaction.count }}
@@ -442,7 +440,7 @@
              
               <button 
                 @click="showReactionEmojiPicker = true" 
-                class="text-blue-500 hover:text-blue-700 flex items-center"
+                class="text-brand hover:text-brand-dark flex items-center"
               >
                 <Icon icon="mdi:emoticon" class="w-5 h-5 mr-1" />
                 More emojis
@@ -529,13 +527,13 @@
                 @input="handleTyping"
                 @keypress.enter="sendGroupMessage"
                 placeholder="Type a message..."
-                class="w-full border border-gray-300 rounded-lg px-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full border border-gray-200 rounded-full px-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand/30 bg-gray-50"
               />
             </div>
             <button
               @click="sendGroupMessage"
               :disabled="(!newMessage.trim() && !selectedFile) || uploading"
-              class="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center"
+              class="ml-2 bg-brand text-white px-4 py-2.5 rounded-full hover:bg-brand-dark disabled:opacity-50 flex items-center transition-colors"
             >
               <template v-if="uploading">
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -557,16 +555,20 @@
 
 
 
-      <div v-else class="flex-1 flex items-center justify-center bg-gray-50" style="background-image: url('/bg.jpg')">
-        <div class="text-center">
+      <div v-else class="flex-1 flex items-center justify-center chat-wallpaper-panel">
+        <div class="text-center px-6">
           <button
             v-if="!sidebarVisible"
             @click="toggleSidebar"
-            class=" top-4 mr-3 z-50 p-[2px]  bg-white rounded-full shadow-md hover:bg-gray-100 transition-all duration-300 mb-4"
-            >
-              Open Slide Window
-            </button>
-          <h3 class="text-xl font-semibold text-blue-600 bg-gray-100 rounded p-1">Select a user to start chatting...</h3>
+            class="mb-6 p-2 bg-brand text-white rounded-full shadow-md hover:bg-brand-dark transition-all"
+          >
+            <Icon icon="mdi:menu" class="w-5 h-5" />
+          </button>
+          <div class="w-20 h-20 rounded-full bg-brand/10 flex items-center justify-center mx-auto mb-4">
+            <Icon icon="mdi:message-text-outline" class="text-4xl text-brand" />
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">ChatFlow Web</h3>
+          <p class="text-gray-500 dark:text-gray-400 text-sm mt-2 max-w-xs mx-auto">Select a conversation from the sidebar to start messaging</p>
         </div>
       </div>
     </div>

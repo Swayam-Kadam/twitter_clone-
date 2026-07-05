@@ -4,6 +4,10 @@ import router from './components/Navbar/index'
 import App from './App.vue'
 import VueToast from 'vue-toast-notification'
 import 'vue-toast-notification/dist/theme-sugar.css'
+import { useTheme } from './composables/useTheme'
+
+const { initTheme } = useTheme()
+initTheme()
 
 const app = createApp(App)
 

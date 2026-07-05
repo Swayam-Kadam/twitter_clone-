@@ -7,7 +7,9 @@ defineProps({
 </script>
 
 <template>
-  <div class="min-h-screen bg-center" style="background-image: url('/bg.jpg')">
-    <ProfilePage :session="session" />
+  <div class="min-h-screen chat-wallpaper">
+    <div class="max-w-4xl mx-auto">
+      <ProfilePage :session="session" />
+    </div>
   </div>
 </template>

@@ -79,3 +79,239 @@ button:focus-visible {
 } */
 
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand: #128c7e;
+  --color-brand-dark: #075e54;
+  --color-brand-light: #25d366;
+  --color-bubble-sent: #dcf8c6;
+  --color-chat-panel: #efeae2;
+  --font-family-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ── Chat app wallpaper (WhatsApp-style) ── */
+.chat-wallpaper {
+  background-color: #e5ddd5;
+  background-image: url('/chat-wallpaper.svg');
+  background-size: 412px 412px;
+  background-repeat: repeat;
+  background-position: center;
+}
+
+.chat-wallpaper-dark {
+  background-color: #0b141a;
+  background-image: url('/chat-wallpaper-dark.svg');
+  background-size: 412px 412px;
+  background-repeat: repeat;
+  background-position: center;
+}
+
+.chat-wallpaper-panel {
+  background-color: #efeae2;
+  background-image: url('/chat-wallpaper.svg');
+  background-size: 412px 412px;
+  background-repeat: repeat;
+  background-position: center;
+}
+
+.chat-auth-screen {
+  position: relative;
+  background-color: #128c7e;
+  background-image:
+    linear-gradient(135deg, rgba(18, 140, 126, 0.92) 0%, rgba(7, 94, 84, 0.95) 100%),
+    url('/chat-wallpaper.svg');
+  background-size: 412px 412px;
+  background-repeat: repeat;
+}
+
+/* ── App layout ── */
+html, body, #app {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-family-sans);
+}
+
+#app {
+  max-width: none;
+  padding: 0;
+  text-align: left;
+}
+
+.app-shell {
+  min-height: calc(100vh - 56px);
+  padding: 1rem;
+}
+
+.app-content {
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.app-page-header {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.app-card {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+.app-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.btn-brand {
+  background-color: #128c7e;
+  color: white;
+  font-weight: 600;
+  border-radius: 9999px;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-brand:hover {
+  background-color: #075e54;
+}
+
+.btn-brand:active {
+  transform: scale(0.98);
+}
+
+.btn-brand-outline {
+  background: white;
+  color: #128c7e;
+  border: 1.5px solid #128c7e;
+  font-weight: 600;
+  border-radius: 9999px;
+  transition: background-color 0.2s;
+}
+
+.btn-brand-outline:hover {
+  background-color: rgba(18, 140, 126, 0.08);
+}
+
+.chat-header-bar {
+  background: #128c7e;
+  color: white;
+  border-bottom: 1px solid #075e54;
+}
+
+.chat-sidebar-panel {
+  background: #ffffff;
+  border-right: 1px solid #e0e0e0;
+}
+
+.chat-list-item-active {
+  background-color: rgba(18, 140, 126, 0.1) !important;
+  border-left: 3px solid #128c7e;
+}
+
+.bubble-sent {
+  background-color: #dcf8c6;
+  color: #303030;
+  border-radius: 0.5rem 0.5rem 0 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.bubble-received {
+  background-color: white;
+  color: #303030;
+  border-radius: 0.5rem 0.5rem 0.5rem 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.tab-active {
+  color: #128c7e;
+  border-bottom: 2px solid #128c7e;
+}
+
+.profile-cover {
+  background: linear-gradient(135deg, #128c7e 0%, #075e54 100%);
+}
+
+/* ── Light / Dark theme (entire app except auth) ── */
+.dark .chat-wallpaper {
+  background-color: #0b141a;
+  background-image: url('/chat-wallpaper-dark.svg');
+}
+
+.dark .chat-wallpaper-panel {
+  background-color: #0b141a;
+  background-image: url('/chat-wallpaper-dark.svg');
+}
+
+.dark .app-page-header {
+  background: #1f2c34;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e9edef;
+}
+
+.dark .app-card {
+  background: #1f2c34;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e9edef;
+}
+
+.dark .app-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.dark .chat-sidebar-panel {
+  background: #111b21;
+  border-right-color: #2a3942;
+}
+
+/* Sidebar scroll area fills remaining height with same background */
+.chat-sidebar-panel .flex-1 {
+  background: inherit;
+}
+
+.dark .bubble-received {
+  background-color: #202c33;
+  color: #e9edef;
+}
+
+.dark .btn-brand-outline {
+  background: transparent;
+  color: #25d366;
+  border-color: #25d366;
+}
+
+.dark .btn-brand-outline:hover {
+  background-color: rgba(37, 211, 102, 0.1);
+}
+
+.dark .profile-page-shell {
+  background: #111b21;
+}
+
+.dark .theme-input {
+  background: #2a3942;
+  border-color: #3b4a54;
+  color: #e9edef;
+}
+
+.dark .theme-muted {
+  color: #8696a0;
+}
+
+.dark .theme-text {
+  color: #e9edef;
+}
+
+.dark .theme-text-heading {
+  color: #ffffff;
+}
+
+.dark .theme-comment-bg {
+  background: #2a3942;
+}

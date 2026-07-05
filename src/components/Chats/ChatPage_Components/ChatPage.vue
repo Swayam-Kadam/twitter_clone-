@@ -67,7 +67,7 @@
         />
       </template>
 
-      <div v-else class="flex-1 flex items-center justify-center bg-gray-50" style="background-image: url('/bg.jpg')">
+      <div v-else class="flex-1 flex items-center justify-center chat-wallpaper-panel">
         <div class="text-center">
           <h3 class="text-xl font-semibold text-blue-600 bg-gray-100 rounded p-1">Select a user to start chatting...</h3>
         </div>
