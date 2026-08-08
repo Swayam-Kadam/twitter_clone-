@@ -187,6 +187,12 @@ The app expects tables such as:
 
 Enable **Row Level Security (RLS)** and appropriate policies for production use.
 
+#### Realtime (online + typing)
+1. Ensure **Realtime** is enabled on your Supabase project
+2. Online presence and typing use **Presence** and **Broadcast** (no table publication required for those)
+3. **Online indicators only show for users who currently have `/chat` open** — visiting Feed or Profile does not mark you online
+4. Typing indicators require both users to have the **same 1:1 chat** open
+
 ### 5. Run the development server
 
 ```bash

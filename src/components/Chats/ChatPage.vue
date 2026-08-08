@@ -32,21 +32,51 @@
           }"
         >
           <div class="flex items-center">
-            <div class="relative">
+            <div class="relative shrink-0">
               <img
                 :src="followedUser.avatar_url || '/default-avatar.png'"
                 :alt="followedUser.username"
                 class="sm:w-12 sm:h-12 w-8 h-8 rounded-full object-cover"
               />
-              <div v-if="onlineUsers.includes(followedUser.id)" class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+              <div
+                v-if="onlineUsers.includes(followedUser.id)"
+                class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-[#111b21] ring-1 ring-green-400/50"
+                title="Online"
+              />
             </div>
-            <div class="ml-3 flex-1">
+            <div class="ml-3 flex-1 min-w-0">
               <div class="flex justify-between items-start">
-                <h3 class="font-semibold sm:text-lg text-sm text-gray-900 dark:text-white">{{ followedUser.full_name || followedUser.username }}</h3>
+                <h3 class="font-semibold sm:text-lg text-sm text-gray-900 dark:text-white truncate">
+                  {{ followedUser.full_name || followedUser.username }}
+                </h3>
               </div>
-              <p class="text-[0.6rem] sm:text-sm text-gray-500 dark:text-gray-400">
-                {{ onlineUsers.includes(followedUser.id) ? 'Online' : 'Offline' }}
-              </p>
+              <div class="flex justify-between items-center gap-2">
+                <p
+                  v-if="isTyping && typingUser === followedUser.id && activeChat && getOtherUser(activeChat) === followedUser.id"
+                  class="text-[0.65rem] sm:text-sm text-brand font-medium italic truncate"
+                >
+                  typing...
+                </p>
+                <p
+                  v-else-if="onlineUsers.includes(followedUser.id)"
+                  class="text-[0.65rem] sm:text-sm text-green-600 dark:text-green-400 font-medium truncate"
+                >
+                  Online
+                </p>
+                <p
+                  v-else
+                  class="text-[0.65rem] sm:text-sm text-gray-400 dark:text-gray-500 truncate"
+                >
+                  Offline
+                </p>
+                <span
+                  v-if="unreadCounts[followedUser.id] > 0"
+                  class="shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-brand text-white text-[0.65rem] font-semibold leading-none"
+                  :title="`${unreadCounts[followedUser.id]} unread message(s)`"
+                >
+                  {{ unreadCounts[followedUser.id] > 99 ? '99+' : unreadCounts[followedUser.id] }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -620,10 +650,16 @@ const activeChat = ref(null);
 const messages = ref([]);
 const newMessage = ref('');
 const onlineUsers = ref([]);
+// Unread DM counts keyed by the other participant's user id.
+const unreadCounts = ref({});
+const myChatsMap = ref({}); // chatId -> other participant's user id
+const unreadChannel = ref(null);
 const isTyping = ref(false);
 const typingUser = ref(null);
 const messagesEndRef = ref(null);
 const typingTimeoutRef = ref(null);
+const lastTypingSentAt = ref(0);
+const TYPING_THROTTLE_MS = 400;
 const showEmojiPicker = ref(false);
 const uploading = ref(false);
 const imagePreview = ref(null);
@@ -646,6 +682,15 @@ const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '😡', '👎', 
 
 // Store channel references
 const presenceChannel = ref(null);
+// Broadcast-based presence (native Supabase Presence frames aren't delivered on
+// this project, but broadcast is). Peers announce themselves via heartbeats and
+// are pruned once they go silent.
+const presenceHeartbeatTimer = ref(null);
+const presencePruneTimer = ref(null);
+const lastSeenById = {}; // userId -> last heartbeat timestamp (ms)
+const PRESENCE_HEARTBEAT_MS = 10000; // how often we re-announce ourselves
+const PRESENCE_PRUNE_MS = 5000; // how often we check for stale peers
+const PRESENCE_OFFLINE_MS = 25000; // mark a peer offline after this much silence
 const messagesChannel = ref(null);
 const typingChannel = ref(null);
 const currentViewedChat = ref(null);
@@ -926,6 +971,64 @@ const fetchFollowing = async () => {
   }
 };
 
+// Build a map of my DM chats -> the other participant, used for unread counts.
+const fetchMyChats = async () => {
+  if (!user.value?.id) return;
+  try {
+    const { data, error } = await supabase
+      .from('chats')
+      .select('id, user1_id, user2_id')
+      .or(`user1_id.eq.${user.value.id},user2_id.eq.${user.value.id}`);
+
+    if (error) throw error;
+
+    const map = {};
+    (data || []).forEach((chat) => {
+      map[chat.id] = chat.user1_id === user.value.id ? chat.user2_id : chat.user1_id;
+    });
+    myChatsMap.value = map;
+  } catch (err) {
+    console.error('Error fetching chats:', err);
+  }
+};
+
+// Count unread messages (sent to me, not yet read) grouped by the other user.
+const fetchUnreadCounts = async () => {
+  if (!user.value?.id) return;
+  const chatIds = Object.keys(myChatsMap.value);
+  if (chatIds.length === 0) {
+    unreadCounts.value = {};
+    return;
+  }
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('id, chat_id, sender_id, read_at')
+      .in('chat_id', chatIds)
+      .neq('sender_id', user.value.id)
+      .is('read_at', null);
+
+    if (error) throw error;
+
+    const counts = {};
+    (data || []).forEach((msg) => {
+      const otherId = myChatsMap.value[msg.chat_id];
+      if (otherId) counts[otherId] = (counts[otherId] || 0) + 1;
+    });
+    unreadCounts.value = counts;
+  } catch (err) {
+    console.error('Error fetching unread counts:', err);
+  }
+};
+
+// Reset the unread badge for a specific user (e.g. after opening/reading the chat).
+const clearUnreadFor = (otherUserId) => {
+  if (!otherUserId || !unreadCounts.value[otherUserId]) return;
+  const next = { ...unreadCounts.value };
+  delete next[otherUserId];
+  unreadCounts.value = next;
+};
+
 const handleSelectUser = async (selectedUser) => {
   try {
     // Check if chat already exists
@@ -952,6 +1055,10 @@ const handleSelectUser = async (selectedUser) => {
       if (newChatError) throw newChatError;
       activeChat.value = newChat;
     }
+
+    // Keep the chat map current and clear the unread badge for this user.
+    myChatsMap.value = { ...myChatsMap.value, [activeChat.value.id]: selectedUser.id };
+    clearUnreadFor(selectedUser.id);
   } catch (err) {
     console.error('Error handling chat:', err);
   }
@@ -1003,6 +1110,11 @@ const markMessagesAsRead = async () => {
 
   if (unreadMessages.length > 0 && isChatVisible()) {
     await trackMessageRead(unreadMessages.map(msg => msg.id));
+  }
+
+  // Clear the sidebar badge for the chat we're viewing.
+  if (isChatVisible()) {
+    clearUnreadFor(getOtherUser(activeChat.value));
   }
 };
 
@@ -1129,22 +1241,18 @@ const getOtherUser = (chat) => {
 };
 
 const handleTyping = () => {
-  if (!activeChat.value) return;
+  if (!activeChat.value || !typingChannel.value || !user.value?.id) return;
 
-  // Broadcast typing event
-  supabase.channel(`typing:${activeChat.value.id}`)
-    .send({
-      type: 'broadcast',
-      event: 'typing',
-      payload: { user_id: user.value.id }
-    });
+  const now = Date.now();
+  if (now - lastTypingSentAt.value < TYPING_THROTTLE_MS) return;
+  lastTypingSentAt.value = now;
 
-  // Reset typing indicator after delay if no more typing
-  clearTimeout(typingTimeoutRef.value);
-  typingTimeoutRef.value = setTimeout(() => {
-    isTyping.value = false;
-    typingUser.value = null;
-  }, 2000);
+  // Must send on the already-subscribed channel (new channels without subscribe drop broadcasts)
+  typingChannel.value.send({
+    type: 'broadcast',
+    event: 'typing',
+    payload: { user_id: user.value.id },
+  });
 };
 
 // Emoji picker functions
@@ -1210,31 +1318,107 @@ const clearImagePreview = () => {
   }
 };
 
-const setupPresenceChannel = () => {
-  // Clean up previous presence channel if exists
+// Mark a peer online (ignore our own id) and remember when we last heard from them.
+const markUserOnline = (userId) => {
+  if (!userId || userId === user.value?.id) return;
+  lastSeenById[userId] = Date.now();
+  if (!onlineUsers.value.includes(userId)) {
+    onlineUsers.value = [...onlineUsers.value, userId];
+  }
+};
+
+// Mark a peer offline and forget their last-seen timestamp.
+const markUserOffline = (userId) => {
+  if (!userId) return;
+  delete lastSeenById[userId];
+  if (onlineUsers.value.includes(userId)) {
+    onlineUsers.value = onlineUsers.value.filter((id) => id !== userId);
+  }
+};
+
+// Drop peers we haven't heard a heartbeat from within the offline window.
+const prunePresence = () => {
+  const now = Date.now();
+  Object.keys(lastSeenById).forEach((id) => {
+    if (now - lastSeenById[id] > PRESENCE_OFFLINE_MS) {
+      markUserOffline(id);
+    }
+  });
+};
+
+// Broadcast our presence on the shared channel.
+const announcePresence = async (event = 'online') => {
+  if (!presenceChannel.value || !user.value?.id) return;
+  try {
+    await presenceChannel.value.send({
+      type: 'broadcast',
+      event,
+      payload: { user_id: user.value.id },
+    });
+  } catch (err) {
+    console.error('Error announcing presence:', err);
+  }
+};
+
+// Re-announce ourselves (used when the tab becomes visible again).
+const trackPresence = async () => {
+  await announcePresence('hello');
+  await announcePresence('online');
+};
+
+// Tear down heartbeat/prune timers and leave the presence channel.
+const teardownPresence = async () => {
+  if (presenceHeartbeatTimer.value) {
+    clearInterval(presenceHeartbeatTimer.value);
+    presenceHeartbeatTimer.value = null;
+  }
+  if (presencePruneTimer.value) {
+    clearInterval(presencePruneTimer.value);
+    presencePruneTimer.value = null;
+  }
   if (presenceChannel.value) {
-    supabase.removeChannel(presenceChannel.value);
+    await announcePresence('offline');
+    await supabase.removeChannel(presenceChannel.value);
+    presenceChannel.value = null;
+  }
+};
+
+// Presence only reflects users who currently have /chat open (not Feed/Profile).
+// Implemented over broadcast: peers exchange 'hello'/'online'/'offline' events.
+const setupPresenceChannel = async () => {
+  if (!user.value?.id) {
+    console.warn('Cannot setup presence: no authenticated user');
+    return;
   }
 
-  presenceChannel.value = supabase.channel('online-users', {
+  await teardownPresence();
+  onlineUsers.value = [];
+
+  presenceChannel.value = supabase.channel('online-users-broadcast', {
     config: {
-      presence: {
-        key: user.value.id,
-      },
+      broadcast: { self: false },
     },
   });
 
   presenceChannel.value
-    .on('presence', { event: 'sync' }, () => {
-      const state = presenceChannel.value.presenceState();
-      onlineUsers.value = Object.keys(state);
+    .on('broadcast', { event: 'hello' }, ({ payload }) => {
+      // A peer just came online. Record them and reply so they learn about us.
+      markUserOnline(payload?.user_id);
+      announcePresence('online');
+    })
+    .on('broadcast', { event: 'online' }, ({ payload }) => {
+      markUserOnline(payload?.user_id);
+    })
+    .on('broadcast', { event: 'offline' }, ({ payload }) => {
+      markUserOffline(payload?.user_id);
     })
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
-        await presenceChannel.value.track({
-          user_id: user.value.id,
-          online_at: new Date().toISOString(),
-        });
+        await announcePresence('hello');
+        presenceHeartbeatTimer.value = setInterval(() => announcePresence('online'), PRESENCE_HEARTBEAT_MS);
+        presencePruneTimer.value = setInterval(prunePresence, PRESENCE_PRUNE_MS);
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('Presence channel failed:', status);
       }
     });
 };
@@ -1441,43 +1625,85 @@ const setupChatChannels = (chatId) => {
   notificationChannels.value[chatId] = notificationChannel;
 };
 
-onMounted(() => {
-  fetchFollowing();
-  setupPresenceChannel();
+// Persistent subscription (independent of the open chat) that keeps the sidebar
+// unread badges in sync as new messages arrive in any of my chats.
+const setupUnreadChannel = () => {
+  if (unreadChannel.value) supabase.removeChannel(unreadChannel.value);
 
-  // Request notification permission
+  unreadChannel.value = supabase
+    .channel('unread-messages')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'messages' },
+      async (payload) => {
+        const msg = payload.new;
+        if (!msg || msg.sender_id === user.value?.id) return;
+
+        let otherId = myChatsMap.value[msg.chat_id];
+        // A brand-new chat started by the other user won't be in the map yet.
+        if (!otherId) {
+          await fetchMyChats();
+          otherId = myChatsMap.value[msg.chat_id];
+        }
+        if (!otherId) return;
+
+        // Skip if I'm actively viewing that chat (it will be marked read).
+        const viewingThis =
+          activeChat.value &&
+          activeChat.value.id === msg.chat_id &&
+          document.visibilityState === 'visible';
+        if (viewingThis) return;
+
+        unreadCounts.value = {
+          ...unreadCounts.value,
+          [otherId]: (unreadCounts.value[otherId] || 0) + 1,
+        };
+      }
+    )
+    .subscribe();
+};
+
+const handleClickOutsideEmoji = (event) => {
+  if (emojiPickerRef.value && !emojiPickerRef.value.contains(event.target)) {
+    showEmojiPicker.value = false;
+  }
+};
+
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    trackPresence();
+    if (isChatVisible()) {
+      markMessagesAsRead();
+    }
+  }
+};
+
+onMounted(async () => {
+  fetchFollowing();
+  await setupPresenceChannel();
+
+  await fetchMyChats();
+  await fetchUnreadCounts();
+  setupUnreadChannel();
+
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
   }
 
-  // Handle clicking outside emoji picker
-  const handleClickOutside = (event) => {
-    if (emojiPickerRef.value && !emojiPickerRef.value.contains(event.target)) {
-      showEmojiPicker.value = false;
-    }
-  };
-
-  document.addEventListener('mousedown', handleClickOutside);
+  document.addEventListener('mousedown', handleClickOutsideEmoji);
   document.addEventListener('visibilitychange', handleVisibilityChange);
   window.addEventListener('focus', markMessagesAsRead);
-  return () => {
-    document.removeEventListener('mousedown', handleClickOutside);
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-    window.removeEventListener('focus', markMessagesAsRead);
-  };
 });
-
-const handleVisibilityChange = () => {
-  if (isChatVisible()) {
-    markMessagesAsRead();
-  }
-};
 
 
 
 
 // Watch for activeChat changes
 watch(activeChat, (newChat) => {
+  isTyping.value = false;
+  typingUser.value = null;
+  lastTypingSentAt.value = 0;
+
   if (newChat) {
     currentViewedChat.value = newChat.id;
     fetchMessages();
@@ -1850,23 +2076,27 @@ watch(groupMessages, () => {
 
 
 onUnmounted(() => {
-  // Clean up all channels when component is unmounted
-  if (presenceChannel.value) supabase.removeChannel(presenceChannel.value);
+  document.removeEventListener('mousedown', handleClickOutsideEmoji);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  window.removeEventListener('focus', markMessagesAsRead);
+
+  teardownPresence();
+  if (unreadChannel.value) supabase.removeChannel(unreadChannel.value);
   if (messagesChannel.value) supabase.removeChannel(messagesChannel.value);
   if (typingChannel.value) supabase.removeChannel(typingChannel.value);
   if (readReceiptChannel.value) supabase.removeChannel(readReceiptChannel.value);
   if (groupChannel.value) supabase.removeChannel(groupChannel.value);
-  
-  // Clean up notification channels
+
   Object.values(notificationChannels.value).forEach(channel => {
     supabase.removeChannel(channel);
   });
   Object.values(groupNotificationChannels.value).forEach(channel => {
     supabase.removeChannel(channel);
   });
-  
+
   clearTimeout(typingTimeoutRef.value);
 });
+
 </script>
 
 <style>
